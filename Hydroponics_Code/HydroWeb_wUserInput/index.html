@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>
+    Modular Smart Hydroponic Vertical Farming System with Advanced Analytics
+    and IoT Integration
+  </title>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+  <link rel="stylesheet" href="style.css" />
+  <script src="script.js" defer></script>
+</head>
+
+<body>
+  <section id="splash" title="Click anywhere">
+    <div class="logo-container">
+      <i class="fas fa-seedling"></i>
+    </div>
+    <div class="title">Modular Hydroponic System</div>
+    <div class="subtitle">Tap to continue</div>
+  </section>
+
+  <main id="app" class="app">
+    <aside id="sidebar" class="sidebar">
+      <div class="sidebar-logo">
+        <i class="fas fa-leaf"></i>
+      </div>
+
+      <div class="nav-buttons-container">
+        <button class="nav-btn active" data-view="dashboard" title="Dashboard">
+          <i class="fas fa-house"></i>
+          <span class="nav-text">Dashboard</span>
+        </button>
+        <button class="nav-btn" data-view="scheduling" title="Scheduling">
+          <i class="fas fa-calendar-alt"></i>
+          <span class="nav-text">Scheduling</span>
+        </button>
+        <button class="nav-btn" data-view="analytics" title="Analytics">
+          <i class="fas fa-chart-line"></i>
+          <span class="nav-text">Analytics</span>
+        </button>
+        <button class="nav-btn" data-view="notifications" title="Notifications & Logs">
+          <i class="fas fa-bell"></i>
+          <span class="nav-text">Notifications & Logs</span>
+        </button>
+      </div>
+
+      <button id="sidebar-toggle-btn" title="Toggle Sidebar">
+        <i class="fas fa-grip-lines-vertical"></i>
+        <span>Minimize</span>
+      </button>
+    </aside>
+
+    <header class="topbar">
+      <button class="btn" id="mobile-menu-btn" title="Open Menu">
+        <i class="fas fa-bars"></i>
+      </button>
+
+      <label class="toggle master-toggle" title="System Power Toggle">
+        <span id="system-status-text">System ON</span>
+        <input id="system-power-toggle" type="checkbox" checked />
+      </label>
+
+      <div class="chip">
+        Crop
+        <select id="crop-select" aria-label="Select crop">
+          <option value="lettuce">Lettuce</option>
+          <option value="bokchoy">Bokchoy</option>
+        </select>
+      </div>
+
+      <div class="auto-mode-container">
+        <label class="toggle chip" title="Auto/Manual">
+          <span id="mode-label">Auto</span>
+          <input id="mode-toggle" type="checkbox" checked />
+        </label>
+      </div>
+    </header>
+
+    <section class="content">
+      <!-- OLD DASHBOARD (PRESERVED) -->
+      <div id="dashboard-view" class="view active-view">
+        <div class="cards">
+          <div class="npk-row">
+            <div class="card">
+              <h4>Nitrogen (N)</h4>
+              <div class="gauge" data-sensor="N">
+                <div class="gauge-visual">
+                  <canvas id="nitrogenDoughnutChart" width="150" height="150"></canvas>
+                </div>
+                <div class="gauge-details">
+                  <div class="value" id="N-value">0 ppm</div>
+                  <div class="kv">
+                    <span>Target</span>
+                    <span id="N-target">-- ppm</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <h4>Phosphorus (P)</h4>
+              <div class="gauge" data-sensor="P">
+                <div class="gauge-visual">
+                  <canvas id="phosphorusDoughnutChart" width="150" height="150"></canvas>
+                </div>
+                <div class="gauge-details">
+                  <div class="value" id="P-value">0 ppm</div>
+                  <div class="kv">
+                    <span>Target</span>
+                    <span id="P-target">-- ppm</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <h4>Potassium (K)</h4>
+              <div class="gauge" data-sensor="K">
+                <div class="gauge-visual">
+                  <canvas id="potassiumDoughnutChart" width="150" height="150"></canvas>
+                </div>
+                <div class="gauge-details">
+                  <div class="value" id="K-value">0 ppm</div>
+                  <div class="kv">
+                    <span>Target</span>
+                    <span id="K-target">-- ppm</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="water-pump-row">
+            <div class="card long-water-card">
+              <h4 style="text-align: center">Water Level</h4>
+              <div class="water-content">
+                <div class="tank-gauge">
+                  <div id="tank-fill" class="tank-fill"></div>
+                </div>
+                <div class="water-details">
+                  <div class="value" id="water-value">50%</div>
+                  <div class="kv">
+                    <span>Target</span>
+                    <span id="water-target">--%</span>
+                  </div>
+                  <div class="kv">
+                    <span>Status</span>
+                    <span><span class="status-dot ok" id="water-status"></span></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card pump-control-card">
+              <h4 style="text-align: center">Water Pump Control</h4>
+              <div class="actions pump-actions">
+                <button class="btn primary" id="pump-on-btn">Pump ON</button>
+                <button class="btn warn" id="pump-off-btn">Pump OFF</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card dosing-controls-card">
+            <h4 style="text-align: center">Manual NPK Injection</h4>
+            <p style="text-align: center; color: var(--muted); font-size: 13px; margin: 4px 0 12px 0;">
+              Enter desired PPM amounts for each nutrient
+            </p>
+            
+            <div class="manual-dosing-grid">
+              <!-- Nitrogen Input -->
+              <div class="nutrient-input-group">
+                <label for="n-amount-input">
+                  <i class="fas fa-flask" style="color: var(--leaf);"></i> Nitrogen (N)
+                </label>
+                <div class="input-with-button">
+                  <input type="number" id="n-amount-input" placeholder="PPM" min="0" step="1" />
+                  <button class="btn nutrient-inject-btn" id="inject-n-btn" data-nutrient="N">
+                    <i class="fas fa-syringe"></i> Inject N
+                  </button>
+                </div>
+              </div>
+
+              <!-- Phosphorus Input -->
+              <div class="nutrient-input-group">
+                <label for="p-amount-input">
+                  <i class="fas fa-flask" style="color: var(--amber);"></i> Phosphorus (P)
+                </label>
+                <div class="input-with-button">
+                  <input type="number" id="p-amount-input" placeholder="PPM" min="0" step="1" />
+                  <button class="btn nutrient-inject-btn" id="inject-p-btn" data-nutrient="P">
+                    <i class="fas fa-syringe"></i> Inject P
+                  </button>
+                </div>
+              </div>
+
+              <!-- Potassium Input -->
+              <div class="nutrient-input-group">
+                <label for="k-amount-input">
+                  <i class="fas fa-flask" style="color: var(--red);"></i> Potassium (K)
+                </label>
+                <div class="input-with-button">
+                  <input type="number" id="k-amount-input" placeholder="PPM" min="0" step="1" />
+                  <button class="btn nutrient-inject-btn" id="inject-k-btn" data-nutrient="K">
+                    <i class="fas fa-syringe"></i> Inject K
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Inject All Button -->
+            <div style="margin-top: 16px; text-align: center;">
+              <button class="btn inject-all-btn" id="inject-all-btn">
+                <i class="fas fa-fill-drip"></i> Inject All Nutrients
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- NEW SCHEDULING VIEW (FROM NEW FILES) -->
+      <div id="scheduling-view" class="view">
+        <h2>Schedule</h2>
+
+        <div class="card">
+          <h4>Mode</h4>
+          <select id="mode-select">
+            <option value="automatic">Automatic</option>
+            <option value="manual">Manual</option>
+          </select>
+        </div>
+
+        <div class="cards">
+          <div class="card">
+            <h4>NPK Injection Schedule (Daily)</h4>
+            <div id="npk-schedule-details"></div>
+          </div>
+          <div class="card">
+            <h4>Water Pump Schedule (Daily)</h4>
+            <div id="pump-schedule-details"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- NEW ANALYTICS VIEW (FROM NEW FILES) -->
+      <div id="analytics-view" class="view">
+        <h2>Analytics</h2>
+        <div class="cards">
+          <div class="card" style="padding: 20px; text-align: center; flex-grow: 1">
+            <canvas id="npkChart" width="400" height="200"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- NEW NOTIFICATIONS VIEW (FROM NEW FILES) -->
+      <div id="notifications-view" class="view">
+        <div class="card" style="flex-grow: 1">
+          <h4>System Notifications & Recent Logs</h4>
+          <ul id="log-list" class="notif-list"></ul>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+
+</html>

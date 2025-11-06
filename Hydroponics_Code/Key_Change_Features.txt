@@ -1,0 +1,19 @@
+Bale eto po lahat ng added features
+
+ESP32 Code:
+- Remove HTTP Request Method
+
+- Dosing Pump Logic:
+   Dosing Pump will be activated 2 seconds at a time with 8 seconds interval between activation
+   8 seconds interval makes sure that the added nutrients is already recorded on the firebase
+   (this ensures accurate adding of nutrients)
+
+- Use NTP for Time syncing (For the Schedule Logic to work)
+   ung unang function nyo kase walang taga check ng time so ung NTP free website sya 
+   na pwede mong i check ung current time tapos i store sa ESP32
+
+js File:
+- Anti Spamming:
+   Disable Other Inject button when one is already active
+   Disable the selected Inject button until ESP32 set the value to false
+- Selected crop on web app will reflect on firebase and be use by ESP32
